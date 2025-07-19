@@ -102,7 +102,7 @@ def get_available_projects() -> list[str]:
 
 
 def detect_active_project() -> str:
-"""Определяет активный проект, читая core/project_config.json"""
+    """Определяет активный проект, читая core/project_config.json"""
     default_project = config.get("PROJECT", "default")
     project = default_project
 
@@ -111,7 +111,7 @@ def detect_active_project() -> str:
         try:
             with open(project_config_path, "r", encoding="utf-8") as f:
                 project_cfg = json.load(f)
-            except Exception as exc:
+        except Exception as exc:
             logging.error("❌ Ошибка при чтении project_config.json: %s", exc)
         else:
             if isinstance(project_cfg, dict):
