@@ -80,6 +80,7 @@ except Exception as e:
     logging.error(f"❌ Ошибка при загрузке settings.json: {e}")
     config = {}
 
+
 # === Чтение ключевых параметров из config ===
 API_ID = config.get("API_ID")
 API_HASH = config.get("API_HASH")
@@ -174,6 +175,44 @@ if not all([API_ID, API_HASH]):
 else:
     logging.info(f"🔧 Настройки проекта '{PROJECT}' успешно загружены (test_mode={TEST_MODE})")
 
+
+
+
+
+# === Пути до файлов проекта ===
+KEYWORDS_1_PATH = f"{PROJECT_PATH}/{PROJECT}/keywords_1.txt"
+KEYWORDS_2_PATH = f"{PROJECT_PATH}/{PROJECT}/keywords_2.txt"
+STOP_WORDS_PROJECT_PATH = f"{PROJECT_PATH}/{PROJECT}/stop_words.txt"
+
+def load_words_from_file(path: str) -> List[str]:
+    """Загружает список слов из текстового файла"""
+    try:
+        with open(path, encoding="utf-8") as f:
+            words = [line.strip().lower() for line in f if line.strip()]
+        logging.info(f"✅ Загружено {len(words)} слов из {path}")
+        return words
+    except FileNotFoundError:
+        logging.warning(f"⚠️ Файл {path} не найден")
+        return []
+    except Exception as e:
+        logging.error(f"❌ Ошибка при чтении файла {path}: {e}")
+        return []
+
+# === Переменные проекта ===
+KEYWORDS_1 = load_words_from_file(KEYWORDS_1_PATH)
+KEYWORDS_2 = load_words_from_file(KEYWORDS_2_PATH)
+STOP_WORDS_PROJECT = load_words_from_file(STOP_WORDS_PROJECT_PATH)
+
+# === ID админов для отчётов ===
+ADMIN_CHAT_ID = config.get("ADMIN_CHAT_ID")
+ADMIN_TEST_CHAT_ID = config.get("ADMIN_TEST_CHAT_ID") 
+
+# === Проверка критически важных значений ===
+if not all([API_ID, API_HASH]):
+    logging.error("❌ В settings.json отсутствуют необходимые параметры!")
+else:
+    logging.info(f"🔧 Настройки проекта '{PROJECT}' успешно загружены (test_mode={TEST_MODE})")
+
 # === Пути до файлов проекта ===
 KEYWORDS_1_PATH = f"{PROJECT_PATH}/{PROJECT}/keywords_1.txt"
 KEYWORDS_2_PATH = f"{PROJECT_PATH}/{PROJECT}/keywords_2.txt"
@@ -219,8 +258,6 @@ TELEGRAM_BOT_IDS = load_bot_ids()
 
 
 
-
-# 4. Вспомогательные функции
 
 # 4. Вспомогательные функции
 
@@ -296,8 +333,8 @@ async def log_lead_to_admin_chat(event, matched_keywords: list[str]):
         if user.id in TELEGRAM_BOT_IDS:
             username_from_button = extract_username_from_button(event)
             if username_from_button:
-                raw_text = f"{username_from_button}\n{raw_text}"
-            raw_text = cut_text_before_symbol(raw_text)
+                text = f"{username_from_button}\n{text}"
+            text = cut_text_before_symbol(text)
         username = f"@{user.username}" if user.username else "Без username"
         user_id = user.id
 
@@ -335,7 +372,7 @@ def cut_text_before_symbol(text: str, symbol: str = "➖") -> str:
 
 # сохранение лидов в ексель проектов
 def save_lead_to_project_excel(project_path, sender_id, username, matched_keywords, text, source):
-    file_path = os.path.join(project_path, "users_database.xlsx")
+    file_path = os.path.join(project_path, "users_database.xlsx")       
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     if not os.path.exists(file_path):
@@ -637,6 +674,7 @@ async def send_daily_leads_report():
         if chat_id:
             text = f"📊 Добрый вечер. За сегодня для вашего проекта найдено {total} лидов"
             await client.send_message(chat_id, text)
+
             logging.info(f"📤 Отправлен дневной отчет ({total} лидов)")
     except Exception as e:
         logging.error(f"❌ Ошибка в send_daily_leads_report: {e}")
