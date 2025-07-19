@@ -452,15 +452,21 @@ async def handle_incoming_message(event):
             return
 
         # Проверка на KEYWORDS_1
-        if not any(kw in normalized for kw in KEYWORDS_1):
+        matched_keywords1 = [kw for kw in KEYWORDS_1 if kw in normalized]
+        if not matched_keywords1:
+            logging.debug("⏭️ Нет ключевых слов K1")
             return
 
+        logging.info(f"🔑 KEYWORDS_1: {matched_keywords1}")
         messages_matched_keywords1 += 1
 
         # Проверка на KEYWORDS_2
         matched_keywords2 = [kw for kw in KEYWORDS_2 if kw in normalized]
         if not matched_keywords2:
+            logging.debug("⏭️ Нет ключевых слов K2")
             return
+
+        logging.info(f"🔑 KEYWORDS_2: {matched_keywords2}")
 
         messages_matched += 1
 
@@ -469,9 +475,13 @@ async def handle_incoming_message(event):
             logging.info("🔁 Дубликат сообщения — уже отправлялось")
             return
 
+        logging.info("💡 Сообщение уникально, сохраняем")
+
         # Сохранение как лид
         save_message_to_excel(raw_text, SENT_MESSAGES_PATH)
         sent_texts_keywords1.add(normalized)
+
+        logging.info("💾 Сообщение добавлено в sent_messages.xlsx")
 
         update_hourly_statistics(PROJECT, TEST_MODE)
 
