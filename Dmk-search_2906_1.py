@@ -99,8 +99,9 @@ def get_available_projects() -> list[str]:
         return []
 
 
+
 def detect_active_project() -> str:
-    """Определяет активный проект, сверяя его с существующими папками"""
+"""Определяет активный проект, читая core/project_config.json"""
     default_project = config.get("PROJECT", "default")
     project = default_project
 
@@ -109,7 +110,13 @@ def detect_active_project() -> str:
         try:
             with open(project_config_path, "r", encoding="utf-8") as f:
                 project_cfg = json.load(f)
-            project = project_cfg.get("project", default_project)
+            if isinstance(project_cfg, dict):
+                project = project_cfg.get("project", default_project)
+            elif isinstance(project_cfg, list):
+                if project_cfg:
+                    project = project_cfg[0]
+            elif isinstance(project_cfg, str):
+                project = project_cfg
         except Exception as exc:
             logging.error(f"❌ Ошибка при чтении project_config.json: {exc}")
             project = default_project
@@ -216,19 +223,7 @@ TELEGRAM_BOT_IDS = load_bot_ids()
 
 # 4. Вспомогательные функции
 
-def load_words_from_file(path: str) -> list[str]:
-    """Загружает список слов из текстового файла"""
-    try:
-        with open(path, encoding="utf-8") as f:
-            words = [line.strip().lower() for line in f if line.strip()]
-        logging.info(f"✅ Загружено {len(words)} слов из {path}")
-        return words
-    except FileNotFoundError:
-        logging.warning(f"⚠️ Файл {path} не найден")
-        return []
-    except Exception as e:
-        logging.error(f"❌ Ошибка при чтении файла {path}: {e}")
-        return []
+# 4. Вспомогательные функции
 
 def normalize_text(text: str) -> str:
     """Очищает текст сообщения от ссылок, символов и приводит к нижнему регистру"""
