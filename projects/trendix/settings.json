@@ -1,0 +1,15 @@
+{
+  "SESSION_NAME": "session_name",
+  "SEND_MESSAGES": true,
+  "API_ID": 20826937,
+  "API_HASH": "0a27d821063a489d7ab1048729e025e1",
+  "FORWARD_TO_USER": -1002331969293,
+  "CHAT_INTRO_MESSAGE": "Здравствуйте! Видел ваш запрос в чате «{chat}». Вам актуально?",
+  "GROUP_INTRO_MESSAGE": "Здравствуйте! Увидел ваш контакт в одном из постов. Вам актуальны предложения по маркетплейсам?",
+  "DELAY_BETWEEN_MESSAGES_MIN": 600,
+  "DELAY_BETWEEN_MESSAGES_MAX": 1200,
+  "REPORT_INTERVAL_SECONDS": 3600,
+  "test_mode": true,
+  "test_limit": 10
+  
+}
