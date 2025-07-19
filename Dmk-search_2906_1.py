@@ -214,11 +214,19 @@ else:
     logging.info(f"🔧 Настройки проекта '{PROJECT}' успешно загружены (test_mode={TEST_MODE})")
 
 # === Пути до файлов проекта ===
-KEYWORDS_1_PATH = f"core/keywords_1.txt"
+KEYWORDS_1_PATH = "core/keywords_1.txt"
 KEYWORDS_2_PATH = f"{PROJECT_PATH}/{PROJECT}/keywords_2.txt"
 STOP_WORDS_PROJECT_PATH = f"{PROJECT_PATH}/{PROJECT}/stop_words.txt"
 TARGET_CHATS_MAIN_PATH = "core/target_chats.txt"
-TARGET_CHATS_TEST_PATH = "core/target_chats_test.txt"
+
+# Перезагрузка списков с ключевыми словами и стоп-словами по финальным путям
+KEYWORDS_1 = load_words_from_file(KEYWORDS_1_PATH)
+KEYWORDS_2 = load_words_from_file(KEYWORDS_2_PATH)
+STOP_WORDS_PROJECT = load_words_from_file(STOP_WORDS_PROJECT_PATH)
+
+logging.info(
+    f"📥 KEYWORDS_1: {len(KEYWORDS_1)}, KEYWORDS_2: {len(KEYWORDS_2)}, STOP_WORDS: {len(STOP_WORDS)}, STOP_WORDS_PROJECT: {len(STOP_WORDS_PROJECT)}"
+)
 
 # === Инициализация Telegram клиента ===
 SESSION_NAME = config.get("SESSION_NAME", "session_name")
@@ -426,11 +434,13 @@ async def handle_incoming_message(event):
 
         chat_id = event.chat_id
         
-        # Проверка: чат должен быть в целевых
-        target_chats_path = TARGET_CHATS_TEST_PATH if TEST_MODE else TARGET_CHATS_MAIN_PATH
+        # Проверка: чат должен быть в целевых (используется общий список)
         try:
-            with open(target_chats_path, encoding="utf-8") as f:
+            with open(TARGET_CHATS_MAIN_PATH, encoding="utf-8") as f:
                 allowed_chats = set(int(line.strip()) for line in f if line.strip().isdigit())
+            logging.debug(
+                f"🎯 Загружено {len(allowed_chats)} целевых чатов: {list(allowed_chats)[:5]}"
+            )
         except Exception as e:
             logging.warning(f"⚠️ Не удалось загрузить список чатов: {e}")
             allowed_chats = set()
@@ -440,18 +450,24 @@ async def handle_incoming_message(event):
             return
         raw_text = event.message.message or ""
         if not raw_text.strip() or len(raw_text) > MAX_MESSAGE_LENGTH:
-            logging.debug(f"⏭️ Пропущено: пустое или слишком длинное сообщение ({len(raw_text)} символов)")
+            logging.debug(
+                f"⏭️ Пропущено: пустое или слишком длинное сообщение ({len(raw_text)} символов)"
+            )
             return
 
         messages_analyzed += 1
         normalized = normalize_text(raw_text)
+        logging.debug(f"🧹 После normalize_text: {normalized}")
 
         # Проверка стоп-слов
-        if any(word in normalized for word in STOP_WORDS + STOP_WORDS_PROJECT):
+        stop_list = STOP_WORDS + STOP_WORDS_PROJECT
+        logging.debug(f"🚫 Проверка стоп-слов среди {len(stop_list)} слов")
+        if any(word in normalized for word in stop_list):
             logging.info(f"🚫 Стоп-слово в сообщении: {raw_text[:60]}...")
             return
 
         # Проверка на KEYWORDS_1
+        logging.debug(f"🔍 Проверка KEYWORDS_1 ({len(KEYWORDS_1)} слов)")
         matched_keywords1 = [kw for kw in KEYWORDS_1 if kw in normalized]
         if not matched_keywords1:
             logging.debug("⏭️ Нет ключевых слов K1")
@@ -461,6 +477,7 @@ async def handle_incoming_message(event):
         messages_matched_keywords1 += 1
 
         # Проверка на KEYWORDS_2
+        logging.debug(f"🔍 Проверка KEYWORDS_2 ({len(KEYWORDS_2)} слов)")
         matched_keywords2 = [kw for kw in KEYWORDS_2 if kw in normalized]
         if not matched_keywords2:
             logging.debug("⏭️ Нет ключевых слов K2")
