@@ -84,7 +84,20 @@ except Exception as e:
 API_ID = config.get("API_ID")
 API_HASH = config.get("API_HASH")
 BOT_TOKEN = config.get("BOT_TOKEN")
-PROJECT = config.get("PROJECT", "default")
+
+# Попытка определить активный проект
+project_config_path = "core/project_config.json"
+if os.path.exists(project_config_path):
+    try:
+        with open(project_config_path, "r", encoding="utf-8") as f:
+            project_cfg = json.load(f)
+        PROJECT = project_cfg.get("project", config.get("PROJECT", "default"))
+    except Exception as e:
+        logging.error(f"❌ Ошибка при чтении project_config.json: {e}")
+        PROJECT = config.get("PROJECT", "default")
+else:
+    PROJECT = config.get("PROJECT", "default")
+
 TEST_LIMIT = config.get("test_limit", DEFAULT_TEST_LIMIT)
 TEST_MODE = config.get("test_mode", False)
 
