@@ -85,18 +85,51 @@ API_ID = config.get("API_ID")
 API_HASH = config.get("API_HASH")
 BOT_TOKEN = config.get("BOT_TOKEN")
 
-# Попытка определить активный проект
-project_config_path = "core/project_config.json"
-if os.path.exists(project_config_path):
+# Определение активного проекта
+def get_available_projects() -> list[str]:
+    """Возвращает список директорий внутри projects"""
     try:
-        with open(project_config_path, "r", encoding="utf-8") as f:
-            project_cfg = json.load(f)
-        PROJECT = project_cfg.get("project", config.get("PROJECT", "default"))
-    except Exception as e:
-        logging.error(f"❌ Ошибка при чтении project_config.json: {e}")
-        PROJECT = config.get("PROJECT", "default")
-else:
-    PROJECT = config.get("PROJECT", "default")
+        return [
+            d
+            for d in os.listdir(PROJECT_PATH)
+            if os.path.isdir(os.path.join(PROJECT_PATH, d))
+        ]
+    except Exception as exc:
+        logging.error(f"❌ Ошибка при получении проектов: {exc}")
+        return []
+
+
+def detect_active_project() -> str:
+    """Определяет активный проект, сверяя его с существующими папками"""
+    default_project = config.get("PROJECT", "default")
+    project = default_project
+
+    project_config_path = os.path.join("core", "project_config.json")
+    if os.path.exists(project_config_path):
+        try:
+            with open(project_config_path, "r", encoding="utf-8") as f:
+                project_cfg = json.load(f)
+            project = project_cfg.get("project", default_project)
+        except Exception as exc:
+            logging.error(f"❌ Ошибка при чтении project_config.json: {exc}")
+            project = default_project
+
+    available = get_available_projects()
+    if available:
+        if project not in available:
+            logging.warning(
+                f"⚠️ Проект '{project}' не найден. Используется '{available[0]}'"
+            )
+            project = available[0]
+    else:
+        logging.warning(
+            "⚠️ В папке projects нет доступных проектов. Используется 'default'"
+        )
+
+    return project
+
+
+PROJECT = detect_active_project()
 
 TEST_LIMIT = config.get("test_limit", DEFAULT_TEST_LIMIT)
 TEST_MODE = config.get("test_mode", False)
