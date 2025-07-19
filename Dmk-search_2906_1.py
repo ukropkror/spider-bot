@@ -214,11 +214,11 @@ else:
     logging.info(f"🔧 Настройки проекта '{PROJECT}' успешно загружены (test_mode={TEST_MODE})")
 
 # === Пути до файлов проекта ===
-KEYWORDS_1_PATH = f"{PROJECT_PATH}/{PROJECT}/keywords_1.txt"
+KEYWORDS_1_PATH = f"core/keywords_1.txt"
 KEYWORDS_2_PATH = f"{PROJECT_PATH}/{PROJECT}/keywords_2.txt"
 STOP_WORDS_PROJECT_PATH = f"{PROJECT_PATH}/{PROJECT}/stop_words.txt"
-TARGET_CHATS_MAIN_PATH = f"{PROJECT_PATH}/{PROJECT}/target_chats.txt"
-TARGET_CHATS_TEST_PATH = f"{PROJECT_PATH}/{PROJECT}/target_chats_test.txt"
+TARGET_CHATS_MAIN_PATH = "core/target_chats.txt"
+TARGET_CHATS_TEST_PATH = "core/target_chats_test.txt"
 
 # === Инициализация Telegram клиента ===
 SESSION_NAME = config.get("SESSION_NAME", "session_name")
